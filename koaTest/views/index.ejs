@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Index</title>
+</head>
+
+<body>
+    <hr>
+    <!-- Ejs引入模板 -->
+    <%- include('public/test_header') -%>
+        <hr>
+        <h2 class="innertitle">这是一个头部的模块（内置的）</h2>
+        <hr>
+        <h2>index.ejs</h2>
+        <hr>
+        <!-- Ejs绑定数据 -->
+        <ul>
+            <% for(var i=0;i<news.length;i++){ %>
+                <li>
+                    <%= news[i] %>
+                </li>
+                <% } %>
+        </ul>
+        <!-- Ejs绑定html数据 -->
+        <hr>
+        <h2>绑定html数据</h2>
+        <hr>
+        <%= content %>
+            <hr>
+            <%- content %>
+                <hr>
+                <%= title %>
+                    <hr>
+                    <img src="/images/05.png" alt="">
+                    <hr />
+                    <img src="/images/09.png" alt="">
+                    <hr />
+</body>
+
+</html>

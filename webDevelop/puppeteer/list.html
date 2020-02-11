@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>list</title>
+</head>
+
+<body>
+    <ul>
+        <li>
+            <abc href="file:///D:/java/newworkspace/NODE/NodeJS/webDevelop/puppeteer/list_child.html?id=1" target="_blank" id="first">第一条</abc>
+        </li>
+        <li>
+            <abc href="file:///D:/java/newworkspace/NODE/NodeJS/webDevelop/puppeteer/list_child.html?id=2" target="_blank">第二条</abc>
+        </li>
+        <li>
+            <abc href="file:///D:/java/newworkspace/NODE/NodeJS/webDevelop/puppeteer/list_child.html?id=3" target="_blank">第三条</abc>
+        </li>
+    </ul>
+</body>
+<script type="text/javascript" src="jquery-3.4.1.min.js"></script>
+<script type="text/javascript">
+    $(function() {
+        $('abc').attr('style', 'cursor: pointer;');
+        $('abc').click(function() {
+            console.log($(this).text(), $(this).attr('href'));
+            window.open($(this).attr('href'));
+        });
+    });
+</script>
+
+</html>

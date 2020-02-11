@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>child</title>
+</head>
+
+<body>
+    <input id="cli" type="button" value="点一下">
+</body>
+<script type="text/javascript" src="jquery-3.4.1.min.js"></script>
+<script type="text/javascript">
+    $(function() {
+        const _url = window.location.href;
+        console.log(_url);
+        $('#cli').attr('value', $('#cli').attr('value') + _url.substring(_url.length - 1));
+        $('#cli').click(function() {
+            alert(1);
+            window.close();
+        });
+    });
+</script>
+
+</html>

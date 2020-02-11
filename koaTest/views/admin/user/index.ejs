@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>用户管理</title>
+</head>
+
+<body>
+    <hr>
+    <%- include('../../public/header') -%>
+
+        <!-- header -->
+        <div id="headDiv">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <a class="navbar-brand" href="/">首页</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/user">用户 <span class="sr-only">(current)</span></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">其他</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+        <!-- header -->
+        <hr>
+        <button type="button" class="btn btn-success" id="insertUserBtn">添加用户</button>
+        <hr>
+        <!-- table -->
+        <div id="tableDiv">
+            <table id="userTable" class="display">
+                <thead>
+                    <tr>
+                        <th>编号</th>
+                        <th>姓名</th>
+                        <th>年龄</th>
+                        <th>生日</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Row 1 Data 1</td>
+                        <td>Row 1 Data 2</td>
+                        <td>Row 1 Data 2</td>
+                        <td>Row 1 Data 2</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- table -->
+        <hr>
+        <!-- form -->
+        <div id="editDiv" style="display: none;">
+            <form id="userForm">
+                <input type="hidden" name="userid" id="userid">
+                <div class="form-group">
+                    <label for="exampleFormControlInput1">姓名</label>
+                    <input type="text" name="username" id="username" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="exampleFormControlInput1">年龄</label>
+                    <input type="text" name="userage" id="userage" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="exampleFormControlInput1">生日</label>
+                    <input type="text" name="userbirth" id="userbirth" class="form-control">
+                </div>
+            </form>
+        </div>
+        <!-- form -->
+
+        <hr>
+</body>
+
+<script>
+    $(function() {
+        let userMap = {};
+        let userTable;
+        // 导航栏点击事件
+        $('#headDiv').find('a').click(function() {
+            $('#headDiv').find('a').each(function(a, b) {
+                if ($(this).hasClass('nav-link'))
+                    $(this).parent().removeClass('active');
+            });
+            $(this).parent().addClass('active');
+        });
+        // datatable
+        loadUserList();
+
+        function loadUserList() {
+            userTable = $('#userTable').DataTable({
+                stateSave: true,
+                destroy: true,
+                processing: true,
+                scrollX: true,
+                scrollY: true,
+                bAutoWidth: false, // 是否自适应宽度
+                language: {
+                    processing: '加载中...',
+                    lengthMenu: '每页显示 _MENU_条',
+                    zeroRecords: '没有找到符合条件的数据',
+                    info: '当前第 _START_ - _END_ 条　共计 _TOTAL_ 条',
+                    infoEmpty: "木有记录",
+                    infoFiltered: '(从 _MAX_ 条记录中过滤)',
+                    search: '搜索：',
+                    paginate: {
+                        first: "首页",
+                        last: "末页",
+                        next: "下一页",
+                        previous: "上一页"
+                    }
+                },
+                ajax: {
+                    url: '/user/list',
+                    type: 'get',
+                    data: function(param) { // 传给服务器的数据，可以添加我们自己的查询参数
+                        return param;
+                    },
+                    dataSrc: function(ret) { // 用于处理服务器端返回的数据。 dataSrc是DataTable特有的
+                        $.each(ret.data, function(i, result) {
+                            userMap[result.id] = result;
+                        });
+                        return ret.data;
+                    }
+                },
+                columns: [{
+                    data: 'id',
+                    width: '20%'
+                }, {
+                    data: 'name',
+                    width: '20%'
+                }, {
+                    data: 'age',
+                    width: '20%'
+                }, {
+                    data: 'birth',
+                    width: '20%',
+                    render: function(data, type, row, meta) {
+                        return getLocalTimeStr(data);
+                    }
+                }, {
+                    data: 'id',
+                    width: '20%',
+                    render: function(data, type, row, meta) {
+                        let _html = '';
+                        _html += "&nbsp;<a class='btn btn-info btn-xs user-edit' data-id='" + row.id + "'>修改</a>";
+                        _html += "&nbsp;<a class='btn btn-danger btn-xs user-delete' data-id='" + row.id + "'>删除</a>";
+                        return _html;
+                    }
+                }],
+                drawCallback: function() {
+                        // 指定跳转页面
+                        $("#userTable_paginate").append("<input id='pi2' class='margin text-center paginput pipt' type='text' style='width: 80px;'> 页  <a id='pb2' class='btn btn-info shiny pagbtn' href='javascript:;'>跳转</a>");
+                        $('#pb2').click(function(e) {
+                            if ($("#pi2").val() && $("#pi2").val() > 0)
+                                $("#userTable").dataTable().fnPageChange($("#pi2").val() - 1);
+                            else
+                                $("#userTable").dataTable().fnPageChange(0);
+                        });
+                        // 绑定查看事件
+                        $(".user-detail").click(function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            var _id = $(this).attr("data-id");
+                            var _curO = userMap[_id];
+                        });
+                        // 绑定修改事件
+                        $(".user-edit").click(function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            var _id = $(this).attr("data-id");
+                            var _curO = userMap[_id];
+                            $('#userid').val(_curO.id);
+                            $('#username').val(_curO.name);
+                            $('#userage').val(_curO.age);
+                            $('#userbirth').val(_curO.birth);
+                            let index_update = layer.open({
+                                type: 1,
+                                title: '修改',
+                                skin: 'layui-layer-rim', //加上边框
+                                area: ['40%', '80%'], //宽高
+                                shadeClose: true, //开启遮罩关闭
+                                content: $('#editDiv'),
+                                btn: ['保存', '取消'],
+                                btn1: function() {
+                                    $.ajax({
+                                        url: '/user/update',
+                                        type: 'post',
+                                        data: $('#userForm').serializeArray(),
+                                        success: function(result) {
+                                            console.log(result);
+                                            layer.close(index_update);
+                                            layer.msg('修改成功');
+                                            loadUserList();
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                        // 绑定删除事件
+                        $(".user-delete").click(function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            var _id = $(this).attr("data-id");
+                            var _curO = userMap[_id];
+                            let index_delete = layer.confirm(`确定要删除<b style="color: red"> ${_curO.name} </b>吗？`, {
+                                skin: 'layui-layer-rim', // 加上边框
+                                shadeClose: true, // 开启遮罩关闭
+                                btn: ['确定', '取消'],
+                                btn1: function() {
+                                    $.ajax({
+                                        url: '/user/delete',
+                                        type: 'get',
+                                        data: {
+                                            userid: _id
+                                        },
+                                        success: function(result) {
+                                            console.log(result);
+                                            layer.close(index_delete);
+                                            layer.msg('删除成功');
+                                            loadUserList();
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                    }
+                    // drawCallback end
+            });
+        }
+        // 单行选中
+        $('#userTable tbody').on('click', 'tr', function() {
+            if ($(this).hasClass('selected')) {
+                $(this).removeClass('selected');
+            } else {
+                userTable.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+            }
+        });
+        // 绑定修改事件
+        $("#insertUserBtn").click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#userForm').find('input').val('');
+            let index_add = layer.open({
+                type: 1,
+                title: '添加',
+                skin: 'layui-layer-rim', //加上边框
+                area: ['40%', '80%'], //宽高
+                shadeClose: true, //开启遮罩关闭
+                content: $('#editDiv'),
+                btn: ['保存', '取消'],
+                btn1: function() {
+                    $.ajax({
+                        url: '/user/add',
+                        type: 'put',
+                        data: $('#userForm').serializeArray(),
+                        success: function(result) {
+                            console.log(result);
+                            layer.close(index_add);
+                            layer.msg('添加成功');
+                            loadUserList();
+                        }
+                    });
+                }
+            });
+        });
+        // JQ end
+    });
+</script>
+
+</html>

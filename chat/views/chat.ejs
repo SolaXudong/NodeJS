@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title></title>
+		<style type="text/css">
+			.send {
+				position: fixed;
+				bottom: 0;
+				left: 0;
+				height: auto;
+				background-color: #ccc;
+				width: 100%;
+			}
+
+			.send input {
+				font-size: 30px;
+			}
+
+			.send input[type=text] {
+				width: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>小小聊天室 欢迎(<span id="curUser"><%= uname %></span>)</h1>
+		<div>
+			<ul class="list"></ul>
+		</div>
+		<div class="send">
+			<input type="text" id="word" placeholder="按回车发言" />
+			<!-- <input type="button" id="say" value="发言" /> -->
+		</div>
+	</body>
+
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="/jquery-3.4.1.min.js"></script>
+	<script type="text/javascript">
+		var socket = io();
+		$("#word").keydown(function(e) {
+			var _word = $("#word").val();
+			if (!(_word && _word.trim().length > 0)) {
+				$("#word").val('');
+				return;
+			}
+			if (e.keyCode == 13) {
+				// 把文本框的内容上传
+				socket.emit("topic", {
+					"word": _word,
+					"user": $("#curUser").html()
+				});
+				$("#word").val('');
+			}
+		});
+		$("#say").click(function() {
+			var _word = $("#word").val();
+			if (!(_word && _word.trim().length > 0)) {
+				$("#word").val('');
+				return;
+			}
+			// 把文本框的内容上传
+			socket.emit("topic", {
+				"word": _word,
+				"user": $("#curUser").html()
+			});
+			$("#word").val('');
+		});
+		socket.on("topic", function(msg) {
+			$(".list").prepend('<li><b>【' + msg.user + '】: </b>' + msg.word + '</li>');
+		});
+	</script>
+</html>
