@@ -5,7 +5,7 @@ for (var i = 1; i <= 5; i++) {
         let l = parseFloat(Math.random(10)).toFixed(0);
         str += f + "" + l;
         if (j != 5)
-            str += ' ';
+            str += '\t';
     }
     console.log(str);
 }
