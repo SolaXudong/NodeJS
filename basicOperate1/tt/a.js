@@ -45,13 +45,13 @@ function getLocalDate(nS) {
     return nS;
 }
 /**
-	var year = date.getFullYear();
-	var month = date.getMonth() + 1;
-	var day = date.getDate();
-	var hour = date.getHours();
-	var minute = date.getMinutes();
-	var second = date.getSeconds();
-	var result = new Date(year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second);
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var hour = date.getHours();
+    var minute = date.getMinutes();
+    var second = date.getSeconds();
+    var result = new Date(year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second);
 */
 function getNowDate(isHaveTime) {
     if (isHaveTime)
