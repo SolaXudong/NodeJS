@@ -15,7 +15,7 @@
 </head>
 
 <body class="gray-bg">
-    <div class="wrapper wrapper-content  animated fadeInRight">
+    <div class="wrapper wrapper-content animated fadeInRight">
         <div class="row">
             <div class="col-sm-12 col-md-12 col-xl-12">
                 <div class="ibox">
@@ -29,11 +29,13 @@
                             <thead>
                                 <tr>
                                     <th class="text-center">编号</th>
-                                    <th class="text-center">姓名</th>
-                                    <th class="text-center">手机</th>
-                                    <th class="text-center">身份证号</th>
+                                    <th class="text-center">昵称</th>
+                                    <th class="text-center">真实姓名</th>
                                     <th class="text-center">性别</th>
                                     <th class="text-center">年龄</th>
+                                    <th class="text-center">手机</th>
+                                    <th class="text-center">身份证号</th>
+                                    <th class="text-center">认证状态</th>
                                     <th class="text-center">在线状态</th>
                                     <th class="text-center">创建时间</th>
                                     <th class="text-center">操作</th>
@@ -67,7 +69,10 @@
     <script src="/js/DataTables/datatables.min.js"></script>
     <script src="/js/common.js"></script>
     <!-- js over -->
-    <script type="text/javascript">
+    <script type="text/javascript" th:inline="javascript">
+        var xlist = [[${ null}]];
+    </script>
+    <script>
         $(function () {
             var table;
             var userMap = {};
@@ -75,117 +80,149 @@
             loadDataMap();
             loadUserList();
             // 加载数据
-            function loadDataMap() { }
+            function loadDataMap() {
+            }
             // 加载用户
             function loadUserList() {
-                table = $("#dt1").dataTable({
-                    "searching": true, // 是否使用搜索api
-                    "ordering": false, // 是否排序
-                    "destroy": true,
-                    "searchDelay": 200, // 搜索延迟
-                    "oLanguage": {
-                        "sLengthMenu": "每页显示 _MENU_条",
-                        "sZeroRecords": "没有找到符合条件的数据",
-                        "sInfo": "当前第 _START_ - _END_ 条　共计 _TOTAL_ 条",
-                        "sInfoEmpty": "木有记录",
-                        "sInfoFiltered": "(从 _MAX_ 条记录中过滤)",
-                        "sSearch": "搜索：",
-                        "oPaginate": {
-                            "sFirst": "首页",
-                            "sPrevious": "前一页",
-                            "sNext": "后一页",
-                            "sLast": "尾页"
-                        }
-                    },
-                    "scrollX": true,
-                    "scrollY": true,
-                    "bAutoWidth": false, // 是否自适应宽度
-                    "processing": true,
-                    "bServerSide": true,
-                    "ajax": {
-                        "url": "/user/page",
-                        "data": function (rs) {
-                            rs.keyword = $('input[type="search"]').val();
-                            rs.status = 1;
+                table = $("#dt1").dataTable(
+                    {
+                        "searching": true, // 是否使用搜索api
+                        "ordering": false, // 是否排序
+                        "destroy": true,
+                        "searchDelay": 200, // 搜索延迟
+                        "oLanguage": {
+                            "sLengthMenu": "每页显示 _MENU_条",
+                            "sZeroRecords": "没有找到符合条件的数据",
+                            "sInfo": "当前第 _START_ - _END_ 条　共计 _TOTAL_ 条",
+                            "sInfoEmpty": "木有记录",
+                            "sInfoFiltered": "(从 _MAX_ 条记录中过滤)",
+                            "sSearch": "搜索：",
+                            "oPaginate": {
+                                "sFirst": "首页",
+                                "sPrevious": "前一页",
+                                "sNext": "后一页",
+                                "sLast": "尾页"
+                            }
                         },
-                        "dataSrc": function (ret) {
-                            $.each(ret.data, function (i, result) {
-                                userMap[result.id] = result;
+                        "scrollX": true,
+                        "scrollY": true,
+                        "bAutoWidth": false, // 是否自适应宽度
+                        "processing": true,
+                        "bServerSide": true,
+                        "ajax": {
+                            "url": "/user/page",
+                            "data": function (rs) {
+                                rs.keyword = $(
+                                    'input[type="search"]')
+                                    .val();
+                            },
+                            "dataSrc": function (ret) {
+                                if (ret.ret) {
+                                    $
+                                        .each(
+                                            ret.data,
+                                            function (i,
+                                                result) {
+                                                userMap[result.id] = result;
+                                            });
+                                }
+                                return ret.data;
+                            }
+                        },
+                        "columns": [
+                            {
+                                data: "id"
+                            },
+                            {
+                                data: "name"
+                            },
+                            {
+                                data: "realName"
+                            },
+                            {
+                                data: "sex",
+                                render: function (data, type,
+                                    row, meta) {
+                                    var _html = '';
+                                    if (data == 1) {
+                                        _html = '男';
+                                    } else if (data == 0) {
+                                        _html = '女';
+                                    } else {
+                                        _html = '-';
+                                    }
+                                    return _html;
+                                }
+                            },
+                            {
+                                data: "age"
+                            },
+                            {
+                                data: "phone"
+                            },
+                            {
+                                data: "card"
+                            },
+                            {
+                                data: "isVerified",
+                                render: function (data, type,
+                                    row, meta) {
+                                    var _html = '';
+                                    if (data == 1) {
+                                        _html = '<label class="label-info btn-xs">已认证</label>';
+                                    } else if (data == 0) {
+                                        _html = '<label class="label-danger btn-xs">未认证</label>';
+                                    } else {
+                                        _html = '-';
+                                    }
+                                    return _html;
+                                }
+                            },
+                            {
+                                data: "online",
+                                render: function (data, type,
+                                    row, meta) {
+                                    var _html = '';
+                                    if (data == 1) {
+                                        _html = '<label class="label-info btn-xs">在线</label>';
+                                    } else if (data == 0) {
+                                        _html = '<label class="label-danger btn-xs">离线</label>';
+                                    } else {
+                                        _html = '-';
+                                    }
+                                    return _html;
+                                }
+                            },
+                            {
+                                data: "createTime",
+                                render: function (data, type,
+                                    row, meta) {
+                                    return getLocalTime(data);
+                                }
+                            },
+                            {
+                                data: "id",
+                                render: function (data, type,
+                                    row, meta) {
+                                    var html = "";
+                                    html += "&nbsp;<a class='btn btn-info btn-xs user-edit' data-id='" + row.id + "'>修改</a>";
+                                    return html;
+                                }
+                            }],
+                        // 回调
+                        "drawCallback": function () {
+                            // 指定跳转页面
+                            $("#dt1_paginate")
+                                .append(
+                                    "<input id='pi1' class='margin text-center paginput pipt' type='text' style='width: 80px;'> 页  <a id='pb1' class='btn btn-info shiny pagbtn' href='javascript:;'>跳转</a>");
+                            $('#pb1').click(function (e) {
+                                if ($("#pi1").val() && $("#pi1").val() > 0)
+                                    $("#dt1").dataTable().fnPageChange($("#pi1").val() - 1);
+                                else
+                                    $("#dt1").dataTable().fnPageChange(0);
                             });
-                            return ret.data;
-                        }
-                    },
-                    "columns": [{
-                        data: "id",
-                        width: "10%"
-                    }, {
-                        data: "name",
-                        width: "10%"
-                    }, {
-                        data: "phone",
-                        width: "10%"
-                    }, {
-                        data: "card",
-                        width: "10%"
-                    }, {
-                        data: "sex",
-                        render: function (data, type, row, meta) {
-                            var _html = '';
-                            if (data == 1) {
-                                _html = '男';
-                            } else if (data == 0) {
-                                _html = '女';
-                            } else {
-                                _html = '-';
-                            }
-                            return _html;
-                        },
-                        width: "10%"
-                    }, {
-                        data: "age",
-                        width: "10%"
-                    }, {
-                        data: "online",
-                        render: function (data, type, row, meta) {
-                            var _html = '';
-                            if (data == 1) {
-                                _html = '<label class="label-info btn-xs">在线</label>';
-                            } else if (data == 0) {
-                                _html = '<label class="label-danger btn-xs">离线</label>';
-                            } else {
-                                _html = '-';
-                            }
-                            return _html;
-                        },
-                        width: "10%"
-                    }, {
-                        data: "createTime",
-                        render: function (data, type, row, meta) {
-                            return getLocalTime(data);
-                        },
-                        width: "10%"
-                    }, {
-                        data: "id",
-                        render: function (data, type, xrow, meta) {
-                            var html = "";
-                            html += "&nbsp;<a class='btn btn-info btn-xs user-edit' data-id='" + row.id + "'>修改</a>";
-                            return html;
-                        },
-                        width: "10%"
-                    }],
-                    // 回调
-                    "drawCallback": function () {
-                        // 指定跳转页面
-                        $("#dt1_paginate").append("<input id='pi1' class='margin text-center paginput pipt' type='text' style='width: 80px;'> 页  <a id='pb1' class='btn btn-info shiny pagbtn' href='javascript:;'>跳转</a>");
-                        $('#pb1').click(function (e) {
-                            if ($("#pi1").val() && $("#pi1").val() > 0)
-                                $("#dt1").dataTable().fnPageChange($("#pi1").val() - 1);
-                            else
-                                $("#dt1").dataTable().fnPageChange(0);
-                        });
-                        // 绑事件-修改
-                        $(".user-edit").click(
-                            function (e) {
+                            // 绑事件-修改
+                            $(".user-edit").click(function (e) {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 var userId = $(this).attr("data-id");
@@ -205,23 +242,23 @@
                                     btn: ['保存', '取消'],
                                     yes: function () {
                                         curUser = userMap[userId];
-                                        updateUser(false,
-                                            function (rs) {
-                                                layer.msg("修改成功");
-                                                layer.close(_layer_update);
-                                            },
+                                        updateUser(false, function (rs) {
+                                            layer.msg("修改成功");
+                                            layer.close(_layer_update);
+                                        },
                                             function (rs) {
                                                 layer.msg(rs.msg);
                                             });
                                         return false;
                                     },
-                                    cancel: function () { }
+                                    cancel: function () {
+                                    }
                                 });
                             });
-                        // 绑事件-修改 over
-                    }
-                    // 回调 over
-                });
+                            // 绑事件-修改 over
+                        }
+                        // 回调 over
+                    });
             }
             // 加载用户 over
             // 修改用户
