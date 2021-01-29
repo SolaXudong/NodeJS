@@ -2,6 +2,7 @@
  * @tips 需求：读Excel -> 扫描文件夹 -> 匹配PDF和图片 -> 匹配文件拷贝到指定文件夹下 -> 添加MySQL
  * @tips 2021-01-28 22:45:24
  * @tips 安装依赖 >cnpm install xlsx-style mysql fse crypto
+ * @tips 速度：文件名跟PDF和图片比较（一亿次/秒）
  */
 const XLSX = require('xlsx-style');
 const fs = require('fs');
@@ -17,10 +18,10 @@ console.log('##### 【任务开始】');
 let _cost = new Date().getTime();
 // 【准备】 
 let _batch_no = '2021-01-29 04:49:42';
-let _excelPath = 'D:/folder/还呗一期-造数据模板-10000.xlsx'; // 10/1000/10000/100000
+let _excelPath = 'D:/folder/还呗一期-造数据模板-100000.xlsx'; // 10/1000/10000/100000
 let _targetPath = 'D:/folder/huanbei/'; // 复制到的新路径（格式：此目录下存放 huanbei001 huanbei002 文件夹，里面存放 用户身份证MD5 文件夹，里面存放PDF和图片）（如：huanbei001/xxx/xxx.pdf）
 let _scanDirs = ['D:/folder/folder001/', 'D:/folder/folder002/' //
-    // , 'D:/java/workspace/NODE/NodeJS/basicOperate1/node_modules' // 找一个文件多的文件夹，模拟测试，2千多个
+    , 'D:/java/workspace/NODEJS/NodeJS/basicOperate1/node_modules/' // 找一个文件多的文件夹，模拟测试，2千多个
 ]; // 要扫描的文件夹
 let _perFolderContainFileNum = 100; // 每个文件夹放几个用户
 var connection = mysql.createConnection({ // 数据库连接 // createPool/createConnection
@@ -113,7 +114,7 @@ for (let i = 0; i < arr.length; i++) {
     });
     arr[i]['newpdfArr'] = _newpdfArr;
     arr[i]['newjpgArr'] = _newjpgArr;
-    if ((i + 1) % 1000 == 0 || i == arr.length - 1) {
+    if ((i + 1) % 10000 == 0 || i == arr.length - 1) {
         console.log('\t拷贝进度（用户数）：%o/%o cost : %o s', (i + 1), arr.length, (new Date().getTime() - _cost2) / 1000);
         _cost2 = new Date().getTime();
     }
@@ -145,13 +146,14 @@ for (let i = 0; i < arr.length; i++) {
     else {
         _tmpSql += `,(null, '${_obj["id"]}', '${_batch_no}', '${_obj["product"]}', '${_obj["name"]}', '${_obj["idno"]}', '${_arr1}', '${_arr2}', '${_arr3}', '${_arr4}', sysdate())`;
     }
-    if ((i + 1) % 1000 == 0 || i == arr.length - 1) {
+    if ((i + 1) % 10000 == 0 || i == arr.length - 1) {
         let _tmpSql2 = _tmpSql;
         _tmpSql = '';
         _flag = true;
         connection.query(sql + _tmpSql2, (error, results, fields) => {
             if (error) throw error;
-            console.log('\t添加进度（用户数）：%o/%o cost : ', (i + 1), arr.length, (new Date().getTime() - _cost) / 1000, 's');
+            console.log('\t添加进度（用户数）：%o/%o cost : ', (i + 1), arr.length, (new Date().getTime() - _cost2) / 1000, 's');
+            _cost2 = new Date().getTime();
             if (i == arr.length - 1) {
                 connection.end();
                 console.log('##### (4/%o)存储MySQL结束 cost : %o s', _step, (new Date().getTime() - _cost2) / 1000);
@@ -195,10 +197,9 @@ function check(_dir, arr) {
         return;
     if (!arr)
         return;
+    let _tmp = path.basename(_dir);
     for (let i = 0; i < arr.length; i++) {
         xx++;
-        let _arr = _dir.split('\\');
-        let _tmp = _arr[_arr.length - 1];
         let _pdf = arr[i]['pdf'];
         let _jpg = arr[i]['jpg'];
         let _pdfArr = arr[i]['pdfArr'] ? arr[i]['pdfArr'] : [];
@@ -219,8 +220,8 @@ function check(_dir, arr) {
             }
         }
     }
-    if (cc % 100 == 0 || cc == totalCC) {
-        console.log('\t扫描进度（文件数）：%o/%o cost : %o s，共比较次数：%o次', cc, totalCC, (new Date().getTime() - _cost3) / 1000, xx);
+    if (cc % 1000 == 0 || cc == totalCC) {
+        console.log('\t扫描进度（文件数）：%o/%o，共比较次数：%o次，cost : %o s', cc, totalCC, xx, (new Date().getTime() - _cost3) / 1000);
         _cost3 = new Date().getTime();
     }
 }
