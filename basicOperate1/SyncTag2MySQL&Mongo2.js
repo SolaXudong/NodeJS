@@ -6,7 +6,7 @@ const mongoclient = require("mongodb");
 
 console.log('##### 【任务开始】');
 let _cost = new Date().getTime();
-let _excelPath = 'D:/tt/ROBOT.xlsx'; // IVR/ROBOT
+let _excelPath = 'D:/tt/IVR.xlsx'; // IVR/ROBOT
 let _tag = path.basename(_excelPath, '.xlsx');
 let connection = mysql.createConnection({
     host: 'localhost',
