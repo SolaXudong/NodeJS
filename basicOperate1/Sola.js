@@ -18,11 +18,12 @@ console.log('##### 【任务开始】');
 let _cost = new Date().getTime();
 // 【准备】 
 let _batch_no = '2021-01-29 04:49:42';
-let _excelPath = 'D:/folder/还呗一期-造数据模板-100000.xlsx'; // 10/1000/10000/100000
+let _excelPath = 'D:/folder/还呗一期-造数据模板-1000.xlsx'; // 10/1000/10000/100000
 let _targetPath = 'D:/folder/huanbei/'; // 复制到的新路径（格式：此目录下存放 huanbei001 huanbei002 文件夹，里面存放 用户身份证MD5 文件夹，里面存放PDF和图片）（如：huanbei001/xxx/xxx.pdf）
 let _scanDirs = ['D:/folder/folder001/', 'D:/folder/folder002/' //
-    , 'D:/java/workspace/NODEJS/NodeJS/basicOperate1/node_modules/' // 找一个文件多的文件夹，模拟测试，2千多个
-]; // 要扫描的文件夹
+    , 'D:/java/jdk/' // 找一个文件多的文件夹，模拟测试， 1700+
+    // , 'C:/Windows/System32/' // 找一个文件多的文件夹，模拟测试， 18000+
+]; // 要扫描的文件夹（速度：1000/秒）
 let _perFolderContainFileNum = 100; // 每个文件夹放几个用户
 var connection = mysql.createConnection({ // 数据库连接 // createPool/createConnection
     host: 'localhost',
@@ -65,10 +66,11 @@ for (let i = 1; i <= num; i++) {
 arr.shift(); // 去除第一条记录
 console.log('##### (1/%o)解析Excel结束 cost : %o s', _step, (new Date().getTime() - _cost2) / 1000);
 // 【整理表格数据】 
-// 查总计需要遍历文件数（递归）
+console.log('##### (2/%o)查总计需要遍历文件数（递归）开始', _step);
 _scanDirs.forEach(function (filePath) {
     recursiveReadFile(filePath, null);
 });
+console.log('##### (2/%o)查总计需要遍历文件数（递归） cost : %o s', _step, (new Date().getTime() - _cost2) / 1000);
 totalCC = cc;
 cc = 0;
 // 【扫描文件】 
@@ -79,9 +81,9 @@ _scanDirs.forEach(function (filePath) {
     recursiveReadFile(filePath, arr);
 });
 console.log('##### (2/%o)扫描文件结束 cost : %o s', _step, (new Date().getTime() - _cost2) / 1000);
-// console.log('##### 取前3条数据，检查一下');
+console.log('##### 取前n条数据，检查一下');
 // for (let i = 0; i < arr.length; i++) {
-//     if (i < 3)
+//     if (i < 4)
 //         console.log('\t总数据量：%o/%o ：%o', (i + 1), arr.length, JSON.stringify(arr[i]));
 // }
 // 【拷贝文件】 
@@ -95,9 +97,11 @@ for (let i = 0; i < arr.length; i++) {
     let _idnoDir = crypto.createHash('md5').update(arr[i]['idno'], 'utf-8').digest('hex'); // 身份证MD5
     let _pdfArr = arr[i]['pdfArr'] ? arr[i]['pdfArr'] : []; // PDF
     let _jpgArr = arr[i]['jpgArr'] ? arr[i]['jpgArr'] : []; // 图片
+    let _allArr = arr[i]['allArr'] ? arr[i]['allArr'] : []; // 全部
     let _dirSequence = parseInt(i / _perFolderContainFileNum + 1).toFixed(0);
     let _newpdfArr = []; // PDF
     let _newjpgArr = []; // 图片
+    let _newallArr = []; // 全部
     _pdfArr.forEach((_t) => {
         let _arr = _t.split('/');
         let _newPath = _arr[_arr.length - 1];
@@ -112,19 +116,27 @@ for (let i = 0; i < arr.length; i++) {
         fse.copyFileSync(_t, _newPath);
         _newjpgArr.push(_newPath);
     });
+    _allArr.forEach((_t) => {
+        let _arr = _t.split('/');
+        let _newPath = _arr[_arr.length - 1];
+        _newPath = _targetPath + _dirArr + _dirSequence + '/' + _idnoDir + '/' + _newPath;
+        fse.copyFileSync(_t, _newPath);
+        _newallArr.push(_newPath);
+    });
     arr[i]['newpdfArr'] = _newpdfArr;
     arr[i]['newjpgArr'] = _newjpgArr;
+    arr[i]['newallArr'] = _newallArr;
     if ((i + 1) % 10000 == 0 || i == arr.length - 1) {
         console.log('\t拷贝进度（用户数）：%o/%o cost : %o s', (i + 1), arr.length, (new Date().getTime() - _cost2) / 1000);
         _cost2 = new Date().getTime();
     }
 }
 console.log('##### (3/%o)拷贝文件结束 cost : %o s', _step, (new Date().getTime() - _cost2) / 1000);
-// console.log('##### 取前3条数据，再检查一下');
-// for (let i = 0; i < arr.length; i++) {
-//     if (i < 3)
-//         console.log('\t总数据量：%o/%o ：%o', (i + 1), arr.length, JSON.stringify(arr[i]));
-// }
+console.log('##### 取前n条数据，再检查一下');
+for (let i = 0; i < arr.length; i++) {
+    if (i < 4)
+        console.log('\t总数据量：%o/%o ：%o', (i + 1), arr.length, JSON.stringify(arr[i]));
+}
 // 【存储MySQL】 
 connection.connect();
 console.log('##### (4/%o)存储MySQL开始', _step);
@@ -150,16 +162,16 @@ for (let i = 0; i < arr.length; i++) {
         let _tmpSql2 = _tmpSql;
         _tmpSql = '';
         _flag = true;
-        connection.query(sql + _tmpSql2, (error, results, fields) => {
-            if (error) throw error;
-            console.log('\t添加进度（用户数）：%o/%o cost : ', (i + 1), arr.length, (new Date().getTime() - _cost2) / 1000, 's');
-            _cost2 = new Date().getTime();
-            if (i == arr.length - 1) {
-                connection.end();
-                console.log('##### (4/%o)存储MySQL结束 cost : %o s', _step, (new Date().getTime() - _cost2) / 1000);
-                console.log('##### 【任务结束】 cost : %o s', (new Date().getTime() - _cost) / 1000);
-            }
-        });
+        // connection.query(sql + _tmpSql2, (error, results, fields) => {
+        //     if (error) throw error;
+        console.log('\t添加进度（用户数）：%o/%o cost : ', (i + 1), arr.length, (new Date().getTime() - _cost2) / 1000, 's');
+        _cost2 = new Date().getTime();
+        if (i == arr.length - 1) {
+            connection.end();
+            console.log('##### (4/%o)存储MySQL结束 cost : %o s', _step, (new Date().getTime() - _cost2) / 1000);
+            console.log('##### 【任务结束】 cost : %o s', (new Date().getTime() - _cost) / 1000);
+        }
+        // });
     }
 }
 
@@ -197,16 +209,19 @@ function check(_dir, arr) {
         return;
     if (!arr)
         return;
-    let _tmp = path.basename(_dir);
+    // let _tmp = path.basename(_dir);
+    let _path = path.parse(_dir);
+    let _tmp = _path.base; // 取当前文件名，检查需要
+    let _dirName = path.basename(_path.dir); // 取父目录名，检查需要
     for (let i = 0; i < arr.length; i++) {
         xx++;
         let _pdf = arr[i]['pdf'];
         let _jpg = arr[i]['jpg'];
         let _pdfArr = arr[i]['pdfArr'] ? arr[i]['pdfArr'] : [];
         let _jpgArr = arr[i]['jpgArr'] ? arr[i]['jpgArr'] : [];
+        // 如果上一级文件夹的名字，没有匹配上，这个文件夹下面的，一个个判断
         {
             if (_tmp.indexOf(_pdf) != -1) {
-                // _tmp = path.normalize(_dir); // 用Window分隔符“\\”
                 _tmp = path.normalize(_dir).replace(/\\/g, '/'); // 用Linux分隔符“/”
                 _pdfArr.push(_tmp);
                 arr[i]['pdfArr'] = _pdfArr; // 匹配到的PDF路径集合
@@ -217,6 +232,16 @@ function check(_dir, arr) {
                 _tmp = path.normalize(_dir).replace(/\\/g, '/'); // 用Linux分隔符“/”
                 _jpgArr.push(_tmp);
                 arr[i]['jpgArr'] = _jpgArr; // 匹配到的PDF路径集合
+            }
+        }
+        // 如果上一级文件夹的名字，已经匹配上，这个文件夹下面的，都要
+        {
+            if (_dirName.indexOf(_pdf) != -1 || _dirName.indexOf(_jpg) != -1) {
+                _tmp = path.normalize(_dir).replace(/\\/g, '/'); // 用Linux分隔符“/”
+                if (!arr[i]['allArr']) {
+                    arr[i]['allArr'] = [];
+                }
+                arr[i]['allArr'].push(_tmp);
             }
         }
     }
