@@ -6,7 +6,7 @@ const mongoclient = require("mongodb");
 
 console.log('##### 【任务开始】');
 let _cost = new Date().getTime();
-let _excelPath = 'D:/tt/ROBOT.xlsx'; // IVR/ROBOT
+let _excelPath = 'D:/tt/IVR.xlsx'; // IVR/ROBOT
 let _tag = path.basename(_excelPath, '.xlsx');
 let connection = mysql.createConnection({
     host: 'localhost',
@@ -84,16 +84,12 @@ function updateMySQL(_count1, arr) {
         }
         connection.query(_tmpSql, (error2, results2, fields2) => {
             // console.log('\tinsert/update：', _tmpSql);
-            if ((_count1 + 1) % 100 == 0 || _count1 == arr.length - 1) {
-                console.log('\t处理进度（案件数）：%o/%o cost : ', (_count1 + 1), arr.length, (new Date().getTime() - _cost2) / 1000, 's');
+            if ((_count1 + 1) % 1000 == 0 || _count1 == arr.length - 1) {
+                console.log('\t处理进度（MySQL）：%o/%o cost : ', (_count1 + 1), arr.length, (new Date().getTime() - _cost2) / 1000, 's');
                 _cost2 = new Date().getTime();
                 if (_count1 == arr.length - 1) {
                     connection.end();
                     console.log('##### (2)存储MySQL结束 cost : %o s', (new Date().getTime() - _cost2) / 1000);
-                    console.log('##### (3)同步Mongo开始');
-                    _cost2 = new Date().getTime();
-                    console.log('##### (3)同步Mongo结束 cost : %o s', (new Date().getTime() - _cost2) / 1000);
-                    console.log('##### 【任务结束】 cost : %o s', (new Date().getTime() - _cost) / 1000);
                 }
             }
             if (_count1 < arr.length)
@@ -101,6 +97,8 @@ function updateMySQL(_count1, arr) {
         });
     });
 }
+console.log('##### (3)同步Mongo开始');
+_cost2 = new Date().getTime();
 updateMongo(_count2, arr);
 function updateMongo(_count2, arr) {
     if (_count2 == arr.length)
@@ -115,7 +113,15 @@ function updateMongo(_count2, arr) {
     mongoclient.connect("mongodb://debt_test:o4GtROXZF9tXdzJq@47.110.135.139:9717/debt_test_new", { useUnifiedTopology: true }, function (err, client) {
         client.db("debt_test_new").collection("t_case_info").updateMany({ case_no: _obj['caseNo'] }, { $set: _updateObj }, { multi: true }).then(function (result) {
             // console.log('\tmongo：', _count2);
-            client.close();
+            if ((_count2 + 1) % 1000 == 0 || _count2 == arr.length - 1) {
+                console.log('\t处理进度（Mongo）：%o/%o cost : ', (_count2 + 1), arr.length, (new Date().getTime() - _cost2) / 1000, 's');
+                _cost2 = new Date().getTime();
+                if (_count2 == arr.length - 1) {
+                    client.close();
+                    console.log('##### (3)同步Mongo结束 cost : %o s', (new Date().getTime() - _cost2) / 1000);
+                    console.log('##### 【任务结束】 cost : %o s', (new Date().getTime() - _cost) / 1000);
+                }
+            }
             if (_count2 < arr.length)
                 updateMongo(++_count2, arr);
         }, function (err) {
